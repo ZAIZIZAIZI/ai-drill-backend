@@ -46,6 +46,19 @@ function flattenResult({ input = {}, research = null, answers = "", hypotheses =
     .map((r) => `[${r.type || "采纳"}] ${r.hypothesis || ""}：${r.risk || ""}`)
     .join("\n");
 
+  // 假设详情：完整列出所有假设（分类 + 陈述 + 技术路径 + 先验证）
+  const 假设详情 = (hypotheses || [])
+    .map((h, i) => {
+      const line = `${i + 1}. [${h.category || "未分类"}] ${h.statement || ""}`;
+      const tech = (h.tech || []).join("、");
+      const verify = (h.verify || []).join("、");
+      const extra = [];
+      if (tech) extra.push(`技术：${tech}`);
+      if (verify) extra.push(`先验证：${verify}`);
+      return extra.length ? line + "\n" + extra.map((e) => "　　" + e).join("\n") : line;
+    })
+    .join("\n");
+
   // 完整结果兜底（JSON）
   const fullResult = JSON.stringify({ input, research, answers, hypotheses, risks, dimensionGraph });
 
@@ -55,6 +68,7 @@ function flattenResult({ input = {}, research = null, answers = "", hypotheses =
     核心问题: String(input.need || "").trim(),
     追问与回答: String(answers || "").trim(),
     "AI 主要结论": mainConclusion,
+    假设详情,
     机会分类: categories,
     假设总数: hypotheses.length,
     风险提示: riskText,
