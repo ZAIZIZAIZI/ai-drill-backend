@@ -5,6 +5,7 @@ import { callFast, callSlow, callSlowStream, FAST_MODEL, SLOW_MODEL } from "./ll
 import { annotate } from "./workflow/annotate.js";
 import { researchPrompt, questionPrompt, finalizePrompt, verifyPrompt } from "./llm/prompts.js";
 import { formatInput, extractJson } from "./workflow/utils.js";
+import { syncToFeishu } from "./feishu.js";
 
 const app = express();
 app.use(cors());
@@ -130,6 +131,9 @@ app.post("/api/drill/finalize", async (req, res) => {
     });
 
     send({ type: "done", hypotheses, risks, dimensionGraph });
+
+    // 同步结果到飞书多维表格（失败静默降级，不阻塞、不影响钻探主流程）
+    await syncToFeishu({ input, research: researchResult, answers, hypotheses, risks, dimensionGraph });
   } catch (e) {
     send({ type: "error", message: e.message });
   }
